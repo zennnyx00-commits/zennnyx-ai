@@ -1,4 +1,3 @@
-// OPTIMASI: Menggunakan Edge Runtime Vercel agar koneksi lebih cepat (low latency)
 export const config = {
   runtime: 'edge',
 };
@@ -11,29 +10,21 @@ export default async function handler(req) {
     try {
         const { text, image, mimeType, deepThink } = await req.json();
         
-        // Memastikan mengambil GROQ_API_KEY dari Vercel
-        const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey) {
-            return new Response(JSON.stringify({ error: 'GROQ_API_KEY belum terpasang/di-redeploy di Vercel.' }), { status: 500 });
-        }
-
-        // Penentuan Model Resmi Groq
-        let model = "llama-3.1-8b-instant"; // Flash Mode (Sangat Cepat)
-
-        if (image && mimeType) {
-            model = "llama-3.2-11b-vision-preview"; // Vision Mode
-        } else if (deepThink) {
-            model = "llama-3.3-70b-versatile"; // Pro Mode / Deep Think
-        }
-
-        // System Instruction
-        let systemInstruction = "Identitas: Kamu adalah ZennNyx AI. Peran: Membantu menyelesaikan tugas, mengobrol, dan menganalisis data dengan tepat. Selalu gunakan format rapi, struktur yang jelas, dan gaya bahasa teknis/minimalis.";
+        // --- INI ADALAH BAGIAN HARDCODE ---
+        // Hapus tulisan gsk_TULIS_KEY_ASLI_KAMU_DISINI dan tempel key aslimu di dalam tanda kutip
+        const apiKey = "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";
+        // ----------------------------------
         
-        if (deepThink) {
-            systemInstruction += " [MODE EXTENDED DIAKTIFKAN]: Lakukan penalaran (Deep Think). Berikan penjelasan yang komprehensif, analisis mendalam langkah demi langkah, dan jangan memotong informasi. Kamu bebas memberikan jawaban panjang.";
-        } else {
-            systemInstruction += " [MODE STANDAR DIAKTIFKAN]: Jawablah dengan SANGAT singkat, padat, dan langsung ke inti jawaban. Hindari basa-basi. Jika ditanya kodingan, langsung berikan kodenya.";
+        if (!apiKey.startsWith("gsk_")) {
+            return new Response(JSON.stringify({ 
+                error: 'Format Key salah! Pastikan key diawali dengan "gsk_" dan berada di dalam tanda kutip.' 
+            }), { status: 500 });
         }
+
+        let model = deepThink ? "llama-3.3-70b-versatile" : "llama-3.1-8b-instant";
+        if (image && mimeType) model = "llama-3.2-11b-vision-preview";
+
+        const systemInstruction = "Kamu adalah ZennNyx AI. Jawablah dengan rapi, singkat, dan jelas.";
 
         const messages = [
             { role: "system", content: systemInstruction }
@@ -48,10 +39,9 @@ export default async function handler(req) {
                 ]
             });
         } else {
-            messages.push({ role: "user", content: text || "" });
+            messages.push({ role: "user", content: text || "Halo" });
         }
 
-        // Memanggil API Groq
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: { 
@@ -71,8 +61,7 @@ export default async function handler(req) {
             throw new Error(data.error.message || JSON.stringify(data.error));
         }
 
-        let reply = data.choices[0]?.message?.content || "Tidak ada respon dari AI.";
-        reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        const reply = data.choices[0]?.message?.content || "Tidak ada respon dari AI.";
 
         return new Response(JSON.stringify({ reply: reply }), {
             status: 200,
