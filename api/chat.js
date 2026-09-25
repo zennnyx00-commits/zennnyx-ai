@@ -20,14 +20,15 @@ export default async function handler(req) {
             }), { status: 500 });
         }
 
-        // Penentuan Model OpenRouter Gratisan
-        let model = "meta-llama/llama-3.3-70b-instruct:free"; // Default Flash Mode
+                // Penentuan Model OpenRouter Gratisan (Anti-Berbayar)
+        let model = "meta-llama/llama-3.1-8b-instruct:free"; // Flash Mode (Sangat ringan, stabil, & gratis permanen)
 
         if (image && mimeType) {
-            model = "meta-llama/llama-3.2-11b-vision-instruct:free"; // Vision Mode (Gambar)
+            model = "meta-llama/llama-3.2-11b-vision-instruct:free"; // Vision Mode (Untuk baca gambar)
         } else if (deepThink) {
-            model = "deepseek/deepseek-r1:free"; // Pro Mode / DeepThink
+            model = "qwen/qwen-2.5-72b-instruct:free"; // Pro Mode (Sangat cerdas, setara Llama 70B, & selalu gratis)
         }
+
 
         let systemInstruction = "Identitas: Kamu adalah ZennNyx AI. Peran: Membantu menyelesaikan tugas, mengobrol, dan menganalisis data dengan tepat. Selalu gunakan format rapi, struktur yang jelas, dan gaya bahasa teknis/minimalis.";
         
