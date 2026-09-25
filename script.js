@@ -1,4 +1,3 @@
-// Konfigurasi agar enter di markdown menghasilkan baris baru
 marked.use({ breaks: true });
 
 function updateClock() {
@@ -11,12 +10,48 @@ updateClock();
 
 let base64Image = null;
 let mimeType = null;
+let isDeepThink = false; // Status mode AI (Flash/Pro)
+
 const chatBox = document.getElementById('chat-box');
 const inputField = document.getElementById('user-input');
 const sendBtn = document.getElementById('send-btn');
 const imageInput = document.getElementById('image-upload');
 const fileIndicator = document.getElementById('file-indicator');
-const toggleInput = document.getElementById('deep-think-toggle');
+
+// --- LOGIKA MENU MODEL ---
+const modelBtn = document.getElementById('model-selector-btn');
+const modelDropdown = document.getElementById('model-dropdown');
+const modelOptions = document.querySelectorAll('.model-option');
+
+modelBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    modelDropdown.classList.toggle('show');
+});
+
+// Menutup menu jika klik di luar
+document.addEventListener('click', () => {
+    modelDropdown.classList.remove('show');
+});
+
+modelOptions.forEach(option => {
+    option.addEventListener('click', () => {
+        // Hapus class active dari semua opsi
+        modelOptions.forEach(opt => opt.classList.remove('active'));
+        // Tambahkan ke yang dipilih
+        option.classList.add('active');
+        
+        // Update state
+        isDeepThink = option.getAttribute('data-value') === 'true';
+        
+        // Update teks tombol
+        if(isDeepThink) {
+            modelBtn.innerHTML = "✨ Pro";
+        } else {
+            modelBtn.innerHTML = "⚡ Flash";
+        }
+    });
+});
+// -------------------------
 
 imageInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -37,12 +72,10 @@ function appendMessage(sender, text, imgData = null) {
     
     let content = '';
     
-    // Render Gambar
     if (imgData) {
         content += `<img src="data:${mimeType};base64,${imgData}" class="img-preview"><br>`;
     }
     
-    // Parse Markdown (Jika pesan sistem, gunakan replace biasa)
     if (sender === 'system') {
         content += text.replace(/\n/g, '<br>');
     } else {
@@ -53,7 +86,6 @@ function appendMessage(sender, text, imgData = null) {
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
 
-    // Render ulang rumus matematika jika ada
     if (window.MathJax) {
         MathJax.typesetPromise([div]).catch((err) => console.log('MathJax Error:', err));
     }
@@ -67,7 +99,7 @@ async function sendMessage() {
         text: text,
         image: base64Image,
         mimeType: mimeType,
-        deepThink: toggleInput.checked
+        deepThink: isDeepThink
     };
 
     appendMessage('user', text, base64Image);
@@ -80,12 +112,18 @@ async function sendMessage() {
     inputField.disabled = true;
     sendBtn.disabled = true;
     
-    // Tampilkan indikator loading sementara
+    // Tampilkan Animasi Loading Titik-Titik
     const loadingId = "loading-" + Date.now();
     const loadingDiv = document.createElement('div');
     loadingDiv.classList.add('message', 'ai', 'fade-in');
     loadingDiv.id = loadingId;
-    loadingDiv.innerHTML = "<p>Memproses data...</p>";
+    loadingDiv.innerHTML = `
+        <div class="typing-indicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        </div>
+    `;
     chatBox.appendChild(loadingDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
 
@@ -98,22 +136,20 @@ async function sendMessage() {
 
         const data = await response.json();
         
-        // Hapus indikator loading
         document.getElementById(loadingId).remove();
         
         if (data.error) {
             appendMessage('system', `[API_ERROR] ${data.error}`);
         } else {
-            // Render jawaban secara utuh (berisi markdown & rumus math)
             appendMessage('ai', data.reply);
         }
     } catch (err) {
-        document.getElementById(loadingId).remove();
-        appendMessage('system', `[SYS_FAIL] Jaringan terputus atau format server salah.`);
+        if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+        appendMessage('system', `[SYS_FAIL] Jaringan terputus.`);
     } finally {
         inputField.disabled = false;
         sendBtn.disabled = false;
-        inputField.focus();
+        // inputField.focus(); -> DIHAPUS agar keyboard HP tidak otomatis naik menutupi layar setelah AI membalas.
     }
 }
 
