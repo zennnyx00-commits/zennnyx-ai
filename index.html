@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZennNyx AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="terminal-container">
+        <header>
+            <div class="top-bar">
+                <span class="status">CLOUD • RTDB</span>
+                <span id="clock" class="clock">00.00.00</span>
+            </div>
+            <div class="marquee-container">
+                <marquee scrollamount="5">> SYSTEM_ONLINE > ZennNyx AI V3.6 FLASH READY > AWAITING_COMMAND > ENCRYPTION_ENABLED ></marquee>
+            </div>
+        </header>
+
+        <main id="chat-box">
+            <div class="message system">
+                [SYS] ZennNyx AI terhubung.
+                <br>> Peran: Asisten Tugas, Analisis Data, Komunikasi.
+                <br>> Siap menerima instruksi.
+            </div>
+        </main>
+
+        <footer>
+            <div class="control-panel">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="deep-think-toggle">
+                    <span class="slider"></span>
+                    <span class="toggle-label" id="toggle-text">Deep Think: [OFF]</span>
+                </label>
+                <span id="file-indicator" class="file-status">NO_FILE</span>
+            </div>
+            
+            <div class="input-wrapper">
+                <label for="image-upload" class="btn-icon" title="Upload Gambar">[+]</label>
+                <input type="file" id="image-upload" accept="image/*" hidden>
+                
+                <input type="text" id="user-input" placeholder="> ketik perintah di sini..." autocomplete="off">
+                
+                <button id="send-btn" class="btn-icon">[EXE]</button>
+            </div>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
