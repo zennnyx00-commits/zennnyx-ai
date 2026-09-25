@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZennNyx AI</title>
+    <!-- Import Font Cyber/Tech dari Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Library Markdown & Math -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+      window.MathJax = {
+        tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -19,7 +33,7 @@
         </header>
 
         <main id="chat-box">
-            <div class="message system">
+            <div class="message system fade-in">
                 [SYS] ZennNyx AI terhubung.
                 <br>> Mode: Asisten & Analisis.
             </div>
@@ -39,16 +53,14 @@
             
             <div class="input-wrapper">
                 <label for="image-upload" class="icon-btn" title="Upload Gambar">
-                    <!-- Ikon Gambar Vector -->
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                 </label>
                 <input type="file" id="image-upload" accept="image/*" hidden>
                 
-                <input type="text" id="user-input" placeholder="Ketik perintah di sini..." autocomplete="off">
+                <input type="text" id="user-input" placeholder="> Ketik perintah di sini..." autocomplete="off">
                 
                 <button id="send-btn" class="icon-btn">
-                    <!-- Ikon Send Vector -->
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
             </div>
         </footer>

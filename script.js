@@ -1,3 +1,6 @@
+// Konfigurasi agar enter di markdown menghasilkan baris baru
+marked.use({ breaks: true });
+
 function updateClock() {
     const now = new Date();
     const timeString = now.toLocaleTimeString('id-ID', { hour12: false }).replace(/:/g, '.');
@@ -30,17 +33,30 @@ imageInput.addEventListener('change', function(e) {
 
 function appendMessage(sender, text, imgData = null) {
     const div = document.createElement('div');
-    div.classList.add('message', sender);
+    div.classList.add('message', sender, 'fade-in');
     
     let content = '';
+    
+    // Render Gambar
     if (imgData) {
         content += `<img src="data:${mimeType};base64,${imgData}" class="img-preview"><br>`;
     }
-    content += text.replace(/\n/g, '<br>');
+    
+    // Parse Markdown (Jika pesan sistem, gunakan replace biasa)
+    if (sender === 'system') {
+        content += text.replace(/\n/g, '<br>');
+    } else {
+        content += marked.parse(text);
+    }
     
     div.innerHTML = content;
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Render ulang rumus matematika jika ada
+    if (window.MathJax) {
+        MathJax.typesetPromise([div]).catch((err) => console.log('MathJax Error:', err));
+    }
 }
 
 async function sendMessage() {
@@ -63,6 +79,15 @@ async function sendMessage() {
 
     inputField.disabled = true;
     sendBtn.disabled = true;
+    
+    // Tampilkan indikator loading sementara
+    const loadingId = "loading-" + Date.now();
+    const loadingDiv = document.createElement('div');
+    loadingDiv.classList.add('message', 'ai', 'fade-in');
+    loadingDiv.id = loadingId;
+    loadingDiv.innerHTML = "<p>Memproses data...</p>";
+    chatBox.appendChild(loadingDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
 
     try {
         const response = await fetch('/api/chat', {
@@ -73,39 +98,23 @@ async function sendMessage() {
 
         const data = await response.json();
         
+        // Hapus indikator loading
+        document.getElementById(loadingId).remove();
+        
         if (data.error) {
-            // Menampilkan error secara rapi tanpa trigger catch
             appendMessage('system', `[API_ERROR] ${data.error}`);
         } else {
-            appendMessage('ai', '');
-            const aiMessageElement = chatBox.lastElementChild;
-            typeWriterEffect(aiMessageElement, data.reply);
+            // Render jawaban secara utuh (berisi markdown & rumus math)
+            appendMessage('ai', data.reply);
         }
     } catch (err) {
-        // Ini hanya terpicu jika Vercel mati atau internet HP mati
+        document.getElementById(loadingId).remove();
         appendMessage('system', `[SYS_FAIL] Jaringan terputus atau format server salah.`);
     } finally {
         inputField.disabled = false;
         sendBtn.disabled = false;
         inputField.focus();
     }
-}
-
-function typeWriterEffect(element, text) {
-    let i = 0;
-    element.innerHTML = '';
-    const speed = 15; 
-    
-    function typing() {
-        if (i < text.length) {
-            let char = text.charAt(i) === '\n' ? '<br>' : text.charAt(i);
-            element.innerHTML += char;
-            chatBox.scrollTop = chatBox.scrollHeight;
-            i++;
-            setTimeout(typing, speed);
-        }
-    }
-    typing();
 }
 
 sendBtn.addEventListener('click', sendMessage);
