@@ -1,4 +1,4 @@
-// OPTIMASI: Menggunakan Edge Runtime Vercel agar koneksi lebih cepat (low latency)
+// OPTIMASI: Menggunakan Edge Runtime Vercel agar koneksi lebih cepat
 export const config = {
   runtime: 'edge',
 };
@@ -11,22 +11,20 @@ export default async function handler(req) {
     try {
         const { text, image, mimeType, deepThink } = await req.json();
         
-        // Ambil Key dari Environment Vercel
         const apiKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            return new Response(JSON.stringify({ error: 'API Key Groq tidak ditemukan di environment Vercel.' }), { status: 500 });
+            return new Response(JSON.stringify({ error: 'API Key Groq tidak ditemukan di server.' }), { status: 500 });
         }
 
-        // Penentuan Model Groq (MENGGUNAKAN ID KLASIK YANG PERMANEN & STABIL)
-        let model = "llama3-8b-8192"; // Default Flash Mode
+        // MENGGUNAKAN MODEL PALING STABIL & AMAN DI GROQ
+        let model = "llama-3.1-8b-instant"; // Versi instant Llama 3.1 (Pasti Aktif)
 
         if (image && mimeType) {
             model = "llama-3.2-11b-vision-preview"; // Vision Mode
         } else if (deepThink) {
-            model = "llama3-70b-8192"; // Mode Pro (Aman & Permanen)
+            model = "mixtral-8x7b-32768"; // Model tangguh dari Mistral AI yang jarang dihapus
         }
 
-        // System Instruction
         let systemInstruction = "Identitas: Kamu adalah ZennNyx AI. Peran: Membantu menyelesaikan tugas, mengobrol, dan menganalisis data dengan tepat. Selalu gunakan format rapi, struktur yang jelas, dan gaya bahasa teknis/minimalis.";
         
         if (deepThink) {
@@ -40,20 +38,17 @@ export default async function handler(req) {
         ];
 
         if (image && mimeType) {
-            const userContent = [];
-            userContent.push({ type: "text", text: text || "Jelaskan gambar ini." });
-            userContent.push({
-                type: "image_url",
-                image_url: {
-                    url: `data:${mimeType};base64,${image}`
-                }
+            messages.push({ 
+                role: "user", 
+                content: [
+                    { type: "text", text: text || "Jelaskan gambar ini." },
+                    { type: "image_url", image_url: { url: `data:${mimeType};base64,${image}` } }
+                ]
             });
-            messages.push({ role: "user", content: userContent });
         } else {
             messages.push({ role: "user", content: text || "" });
         }
 
-        // Memanggil API Groq
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: { 
@@ -74,8 +69,6 @@ export default async function handler(req) {
         }
 
         let reply = data.choices[0]?.message?.content || "Tidak ada respon dari AI.";
-
-        // Pembersihan tag reasoning jika sewaktu-waktu model dikembalikan ke DeepSeek
         reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
         return new Response(JSON.stringify({ reply: reply }), {
