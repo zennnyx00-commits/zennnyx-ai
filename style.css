@@ -31,7 +31,22 @@ header, .status, .clock, .marquee-container, .file-status, .system, input[type="
 }
 
 header { border-bottom: 1px solid #222; padding: 12px 16px; }
-.top-bar { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 8px; letter-spacing: 1px; color: #888; }
+.top-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; margin-bottom: 8px; letter-spacing: 1px; color: #888; }
+
+/* Animasi Titik Putih CLOUD */
+.status { display: flex; align-items: center; gap: 8px; }
+.pulse-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #FFFFFF;
+    border-radius: 50%;
+    animation: pulseFade 2s infinite ease-in-out;
+}
+@keyframes pulseFade {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 1; box-shadow: 0 0 8px rgba(255,255,255,0.8); }
+}
+
 .marquee-container { font-size: 0.8rem; border: 1px dashed #444; padding: 4px; color: #AAA; }
 
 main {
@@ -49,7 +64,6 @@ main::-webkit-scrollbar { width: 4px; }
 main::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
 
 .message {
-    max-width: 92%;
     padding: 12px 14px;
     font-size: 1rem; /* Ukuran font diperkecil agar pas di HP */
     line-height: 1.5;
@@ -65,19 +79,22 @@ main::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
 
 .user {
     align-self: flex-end;
+    max-width: 85%;
     background: #111111;
     border: 1px solid #333;
     border-radius: 12px 12px 0 12px;
 }
 
 .ai {
-    align-self: flex-start;
+    align-self: stretch;
+    width: 100%; /* Memastikan kontainer AI membentang */
+    max-width: 100%;
     border-left: 3px solid #FFFFFF;
     padding-left: 12px;
-    width: 100%; /* Memastikan kontainer AI membentang */
+    padding-right: 0;
 }
 
-.system { align-self: center; font-size: 0.8rem; color: #888; text-align: center; border: none; }
+.system { align-self: center; font-size: 0.8rem; color: #888; text-align: center; border: none; max-width: 90%; }
 .img-preview { max-width: 100%; border-radius: 6px; margin-bottom: 8px; border: 1px solid #333; }
 
 /* PENANGANAN SCROLL KHUSUS RUMUS & KODE */
@@ -105,6 +122,7 @@ footer { border-top: 1px solid #222; padding: 12px 16px; display: flex; flex-dir
 /* DESAIN MENU MODEL (GANTI TOGGLE) */
 .model-selector-container { position: relative; display: flex; justify-content: space-between; align-items: center; }
 .model-btn {
+    display: flex; align-items: center; gap: 6px;
     background: #000; border: 1px solid #444; color: #FFF; padding: 6px 12px;
     border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s;
 }
@@ -119,7 +137,7 @@ footer { border-top: 1px solid #222; padding: 12px 16px; display: flex; flex-dir
 .model-option:last-child { border-bottom: none; }
 .model-option:hover { background: #222; }
 .model-option.active { background: #1a1a1a; border-left: 3px solid #FFF; }
-.model-icon { font-size: 1.2rem; }
+.model-icon { display: flex; align-items: center; justify-content: center; }
 .model-text strong { display: block; font-size: 0.9rem; }
 .model-text span { display: block; font-size: 0.7rem; color: #888; margin-top: 4px; }
 .file-status { font-size: 0.75rem; color: #AAA; }

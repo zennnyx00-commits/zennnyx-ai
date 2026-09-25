@@ -23,7 +23,7 @@
     <div class="app-container">
         <header>
             <div class="top-bar">
-                <span class="status">CLOUD • RTDB</span>
+                <span class="status"><span class="pulse-dot"></span> CLOUD • RTDB</span>
                 <span id="clock" class="clock">00.00.00</span>
             </div>
             <div class="marquee-container">
@@ -41,17 +41,23 @@
         <footer>
             <!-- Menu Pemilih Model -->
             <div class="model-selector-container">
-                <button id="model-selector-btn" class="model-btn">⚡ Flash</button>
+                <button id="model-selector-btn" class="model-btn">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Flash
+                </button>
                 <div class="model-dropdown" id="model-dropdown">
                     <div class="model-option active" data-value="false">
-                        <span class="model-icon">⚡</span>
+                        <span class="model-icon">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                        </span>
                         <div class="model-text">
                             <strong>Flash (Default)</strong>
                             <span>Respon cepat, ringkas, langsung ke inti.</span>
                         </div>
                     </div>
                     <div class="model-option" data-value="true">
-                        <span class="model-icon">✨</span>
+                        <span class="model-icon">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        </span>
                         <div class="model-text">
                             <strong>Pro (Deep Think)</strong>
                             <span>Penalaran mendalam, analisis komprehensif.</span>

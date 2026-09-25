@@ -18,6 +18,10 @@ const sendBtn = document.getElementById('send-btn');
 const imageInput = document.getElementById('image-upload');
 const fileIndicator = document.getElementById('file-indicator');
 
+// Variabel ikon SVG untuk digunakan di JS
+const svgFlash = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
+const svgPro = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+
 // --- LOGIKA MENU MODEL ---
 const modelBtn = document.getElementById('model-selector-btn');
 const modelDropdown = document.getElementById('model-dropdown');
@@ -43,11 +47,11 @@ modelOptions.forEach(option => {
         // Update state
         isDeepThink = option.getAttribute('data-value') === 'true';
         
-        // Update teks tombol
+        // Update teks tombol beserta SVG
         if(isDeepThink) {
-            modelBtn.innerHTML = "✨ Pro";
+            modelBtn.innerHTML = `${svgPro} Pro`;
         } else {
-            modelBtn.innerHTML = "⚡ Flash";
+            modelBtn.innerHTML = `${svgFlash} Flash`;
         }
     });
 });
@@ -66,7 +70,7 @@ imageInput.addEventListener('change', function(e) {
     }
 });
 
-function appendMessage(sender, text, imgData = null) {
+function appendMessage(sender, text, imgData = null, autoScroll = true) {
     const div = document.createElement('div');
     div.classList.add('message', sender, 'fade-in');
     
@@ -84,7 +88,11 @@ function appendMessage(sender, text, imgData = null) {
     
     div.innerHTML = content;
     chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    
+    // Hanya digulir otomatis jika autoScroll ditetapkan true
+    if (autoScroll) {
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
 
     if (window.MathJax) {
         MathJax.typesetPromise([div]).catch((err) => console.log('MathJax Error:', err));
@@ -102,7 +110,8 @@ async function sendMessage() {
         deepThink: isDeepThink
     };
 
-    appendMessage('user', text, base64Image);
+    // User merespons selalu scroll ke bawah
+    appendMessage('user', text, base64Image, true);
     inputField.value = '';
     fileIndicator.textContent = "";
     base64Image = null;
@@ -125,7 +134,7 @@ async function sendMessage() {
         </div>
     `;
     chatBox.appendChild(loadingDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
+    chatBox.scrollTop = chatBox.scrollHeight; // Fokus otomatis saat menunggu proses
 
     try {
         const response = await fetch('/api/chat', {
@@ -139,13 +148,14 @@ async function sendMessage() {
         document.getElementById(loadingId).remove();
         
         if (data.error) {
-            appendMessage('system', `[API_ERROR] ${data.error}`);
+            appendMessage('system', `[API_ERROR] ${data.error}`, null, true);
         } else {
-            appendMessage('ai', data.reply);
+            // Jawaban AI masuk tanpa scroll paksa ke bagian bawahnya
+            appendMessage('ai', data.reply, null, false);
         }
     } catch (err) {
         if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
-        appendMessage('system', `[SYS_FAIL] Jaringan terputus.`);
+        appendMessage('system', `[SYS_FAIL] Jaringan terputus.`, null, true);
     } finally {
         inputField.disabled = false;
         sendBtn.disabled = false;
