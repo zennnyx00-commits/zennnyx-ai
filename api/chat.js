@@ -17,13 +17,13 @@ export default async function handler(req) {
             return new Response(JSON.stringify({ error: 'API Key Groq tidak ditemukan di environment Vercel.' }), { status: 500 });
         }
 
-        // Penentuan Model Groq yang Aktif
-        let model = "llama-3.1-70b-versatile"; // Default Flash Mode
+        // Penentuan Model Groq (MENGGUNAKAN ID KLASIK YANG PERMANEN & STABIL)
+        let model = "llama3-8b-8192"; // Default Flash Mode
 
         if (image && mimeType) {
             model = "llama-3.2-11b-vision-preview"; // Vision Mode
         } else if (deepThink) {
-            model = "deepseek-r1-distill-qwen-32b"; // Mode Deep Think (Pengganti versi 70b yang di-decommission)
+            model = "llama3-70b-8192"; // Mode Pro (Aman & Permanen)
         }
 
         // System Instruction
@@ -75,7 +75,7 @@ export default async function handler(req) {
 
         let reply = data.choices[0]?.message?.content || "Tidak ada respon dari AI.";
 
-        // Pembersihan tag reasoning <think>...</think> dari model DeepSeek
+        // Pembersihan tag reasoning jika sewaktu-waktu model dikembalikan ke DeepSeek
         reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
         return new Response(JSON.stringify({ reply: reply }), {
