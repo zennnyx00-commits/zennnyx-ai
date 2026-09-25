@@ -10,21 +10,32 @@ export default async function handler(req) {
     try {
         const { text, image, mimeType, deepThink } = await req.json();
         
-        // --- INI ADALAH BAGIAN HARDCODE ---
-        // Hapus tulisan gsk_TULIS_KEY_ASLI_KAMU_DISINI dan tempel key aslimu di dalam tanda kutip
-        const apiKey = "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";
-        // ----------------------------------
-        
-        if (!apiKey.startsWith("gsk_")) {
+        // --- OPSI API KEY ---
+        // Kamu bisa pakai Vercel ENV (OPENROUTER_API_KEY) atau langsung ganti string di bawah ini
+        const apiKey = process.env.OPENROUTER_API_KEY || "sk-or-v1-TEMPEL_KEY_OPENROUTER_DISINI";
+
+        if (!apiKey || apiKey.includes("TEMPEL_KEY")) {
             return new Response(JSON.stringify({ 
-                error: 'Format Key salah! Pastikan key diawali dengan "gsk_" dan berada di dalam tanda kutip.' 
+                error: 'API Key OpenRouter belum dipasang di Vercel atau belum di-hardcode!' 
             }), { status: 500 });
         }
 
-        let model = deepThink ? "llama-3.3-70b-versatile" : "llama-3.1-8b-instant";
-        if (image && mimeType) model = "llama-3.2-11b-vision-preview";
+        // Penentuan Model OpenRouter Gratisan
+        let model = "meta-llama/llama-3.3-70b-instruct:free"; // Default Flash Mode
 
-        const systemInstruction = "Kamu adalah ZennNyx AI. Jawablah dengan rapi, singkat, dan jelas.";
+        if (image && mimeType) {
+            model = "meta-llama/llama-3.2-11b-vision-instruct:free"; // Vision Mode (Gambar)
+        } else if (deepThink) {
+            model = "deepseek/deepseek-r1:free"; // Pro Mode / DeepThink
+        }
+
+        let systemInstruction = "Identitas: Kamu adalah ZennNyx AI. Peran: Membantu menyelesaikan tugas, mengobrol, dan menganalisis data dengan tepat. Selalu gunakan format rapi, struktur yang jelas, dan gaya bahasa teknis/minimalis.";
+        
+        if (deepThink) {
+            systemInstruction += " [MODE EXTENDED DIAKTIFKAN]: Lakukan penalaran (Deep Think). Berikan penjelasan yang komprehensif, analisis mendalam langkah demi langkah, dan jangan memotong informasi.";
+        } else {
+            systemInstruction += " [MODE STANDAR DIAKTIFKAN]: Jawablah dengan SANGAT singkat, padat, dan langsung ke inti jawaban. Hindari basa-basi.";
+        }
 
         const messages = [
             { role: "system", content: systemInstruction }
@@ -42,11 +53,14 @@ export default async function handler(req) {
             messages.push({ role: "user", content: text || "Halo" });
         }
 
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        // Panggilan API ke OpenRouter
+        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
+                'Authorization': `Bearer ${apiKey.trim()}`,
+                'HTTP-Referer': 'https://vercel.com',
+                'X-Title': 'ZennNyx AI'
             },
             body: JSON.stringify({
                 model: model,
@@ -61,7 +75,10 @@ export default async function handler(req) {
             throw new Error(data.error.message || JSON.stringify(data.error));
         }
 
-        const reply = data.choices[0]?.message?.content || "Tidak ada respon dari AI.";
+        let reply = data.choices[0]?.message?.content || "Tidak ada respon dari AI.";
+        
+        // Hapus pemikiran internal <think>...</think> dari DeepSeek R1 agar tampilan chat tetap bersih
+        reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
         return new Response(JSON.stringify({ reply: reply }), {
             status: 200,
