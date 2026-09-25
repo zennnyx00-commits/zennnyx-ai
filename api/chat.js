@@ -11,13 +11,22 @@ export default async function handler(req) {
     try {
         const { text, image, mimeType, deepThink } = await req.json();
         
-        // Ambil Key dari Environment Vercel
-        const apiKey = process.env.GEMINI_API_KEY;
+        // Ambil Key dari Environment Vercel (Mendukung GROQ_API_KEY atau fallback GEMINI_API_KEY)
+        const apiKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            return new Response(JSON.stringify({ error: 'API Key tidak ditemukan di server.' }), { status: 500 });
+            return new Response(JSON.stringify({ error: 'API Key Groq tidak ditemukan di environment Vercel.' }), { status: 500 });
         }
 
-        // Trik Logika Deep Think (Extended)
+        // Penentuan Model Groq berdasarkan Input & Mode
+        let model = "llama-3.3-70b-versatile"; // Default Mode Flash (Cepat & Pintar)
+
+        if (image && mimeType) {
+            model = "llama-3.2-11b-vision-preview"; // Model khusus jika ada upload gambar
+        } else if (deepThink) {
+            model = "deepseek-r1-distill-llama-70b"; // Model khusus Deep Think / Penalaran Mendalam
+        }
+
+        // System Instruction
         let systemInstruction = "Identitas: Kamu adalah ZennNyx AI. Peran: Membantu menyelesaikan tugas, mengobrol, dan menganalisis data dengan tepat. Selalu gunakan format rapi, struktur yang jelas, dan gaya bahasa teknis/minimalis.";
         
         if (deepThink) {
@@ -26,36 +35,49 @@ export default async function handler(req) {
             systemInstruction += " [MODE STANDAR DIAKTIFKAN]: Jawablah dengan SANGAT singkat, padat, dan langsung ke inti jawaban. Hindari basa-basi. Jika ditanya kodingan, langsung berikan kodenya.";
         }
 
-        const parts = [];
-        if (text) parts.push({ text: text });
+        // Menyusun Pesan (Format OpenAI Standard)
+        const messages = [
+            { role: "system", content: systemInstruction }
+        ];
+
         if (image && mimeType) {
-            parts.push({
-                inline_data: {
-                    mime_type: mimeType,
-                    data: image
+            const userContent = [];
+            userContent.push({ type: "text", text: text || "Jelaskan gambar ini." });
+            userContent.push({
+                type: "image_url",
+                image_url: {
+                    url: `data:${mimeType};base64,${image}`
                 }
             });
+            messages.push({ role: "user", content: userContent });
+        } else {
+            messages.push({ role: "user", content: text || "" });
         }
 
-        const payload = {
-            system_instruction: { parts: [{ text: systemInstruction }] },
-            contents: [{ role: "user", parts: parts }]
-        };
-
-        // Memanggil API Gemini 3.6 Flash
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
+        // Memanggil API Groq
+        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: messages,
+                temperature: 0.6
+            })
         });
 
         const data = await response.json();
 
         if (data.error) {
-            throw new Error(data.error.message);
+            throw new Error(data.error.message || JSON.stringify(data.error));
         }
 
-        const reply = data.candidates[0].content.parts[0].text;
+        let reply = data.choices[0]?.message?.content || "Tidak ada respon dari AI.";
+
+        // Pembersihan tag reasoning <think>...</think> jika pakai model DeepSeek R1 agar tampilan chat tetap rapi
+        reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
         return new Response(JSON.stringify({ reply: reply }), {
             status: 200,
