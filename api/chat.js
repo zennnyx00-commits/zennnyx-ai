@@ -11,19 +11,19 @@ export default async function handler(req) {
     try {
         const { text, image, mimeType, deepThink } = await req.json();
         
-        // Ambil Key dari Environment Vercel (Mendukung GROQ_API_KEY atau fallback GEMINI_API_KEY)
+        // Ambil Key dari Environment Vercel
         const apiKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY;
         if (!apiKey) {
             return new Response(JSON.stringify({ error: 'API Key Groq tidak ditemukan di environment Vercel.' }), { status: 500 });
         }
 
-        // Penentuan Model Groq berdasarkan Input & Mode
-        let model = "llama-3.3-70b-versatile"; // Default Mode Flash (Cepat & Pintar)
+        // Penentuan Model Groq yang Aktif
+        let model = "llama-3.1-70b-versatile"; // Default Flash Mode
 
         if (image && mimeType) {
-            model = "llama-3.2-11b-vision-preview"; // Model khusus jika ada upload gambar
+            model = "llama-3.2-11b-vision-preview"; // Vision Mode
         } else if (deepThink) {
-            model = "deepseek-r1-distill-llama-70b"; // Model khusus Deep Think / Penalaran Mendalam
+            model = "deepseek-r1-distill-qwen-32b"; // Mode Deep Think (Pengganti versi 70b yang di-decommission)
         }
 
         // System Instruction
@@ -35,7 +35,6 @@ export default async function handler(req) {
             systemInstruction += " [MODE STANDAR DIAKTIFKAN]: Jawablah dengan SANGAT singkat, padat, dan langsung ke inti jawaban. Hindari basa-basi. Jika ditanya kodingan, langsung berikan kodenya.";
         }
 
-        // Menyusun Pesan (Format OpenAI Standard)
         const messages = [
             { role: "system", content: systemInstruction }
         ];
@@ -76,7 +75,7 @@ export default async function handler(req) {
 
         let reply = data.choices[0]?.message?.content || "Tidak ada respon dari AI.";
 
-        // Pembersihan tag reasoning <think>...</think> jika pakai model DeepSeek R1 agar tampilan chat tetap rapi
+        // Pembersihan tag reasoning <think>...</think> dari model DeepSeek
         reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
 
         return new Response(JSON.stringify({ reply: reply }), {
