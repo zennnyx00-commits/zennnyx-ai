@@ -1,4 +1,4 @@
-// OPTIMASI: Menggunakan Edge Runtime Vercel agar koneksi lebih cepat
+// OPTIMASI: Menggunakan Edge Runtime Vercel agar koneksi lebih cepat (low latency)
 export const config = {
   runtime: 'edge',
 };
@@ -11,20 +11,22 @@ export default async function handler(req) {
     try {
         const { text, image, mimeType, deepThink } = await req.json();
         
-        const apiKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY;
+        // Memastikan mengambil GROQ_API_KEY dari Vercel
+        const apiKey = process.env.GROQ_API_KEY;
         if (!apiKey) {
-            return new Response(JSON.stringify({ error: 'API Key Groq tidak ditemukan di server.' }), { status: 500 });
+            return new Response(JSON.stringify({ error: 'GROQ_API_KEY belum terpasang/di-redeploy di Vercel.' }), { status: 500 });
         }
 
-        // MENGGUNAKAN MODEL PALING STABIL & AMAN DI GROQ
-        let model = "llama-3.1-8b-instant"; // Versi instant Llama 3.1 (Pasti Aktif)
+        // Penentuan Model Resmi Groq
+        let model = "llama-3.1-8b-instant"; // Flash Mode (Sangat Cepat)
 
         if (image && mimeType) {
             model = "llama-3.2-11b-vision-preview"; // Vision Mode
         } else if (deepThink) {
-            model = "mixtral-8x7b-32768"; // Model tangguh dari Mistral AI yang jarang dihapus
+            model = "llama-3.3-70b-versatile"; // Pro Mode / Deep Think
         }
 
+        // System Instruction
         let systemInstruction = "Identitas: Kamu adalah ZennNyx AI. Peran: Membantu menyelesaikan tugas, mengobrol, dan menganalisis data dengan tepat. Selalu gunakan format rapi, struktur yang jelas, dan gaya bahasa teknis/minimalis.";
         
         if (deepThink) {
@@ -49,6 +51,7 @@ export default async function handler(req) {
             messages.push({ role: "user", content: text || "" });
         }
 
+        // Memanggil API Groq
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: { 
