@@ -10,7 +10,7 @@ updateClock();
 
 let base64Image = null;
 let mimeType = null;
-let isDeepThink = false; // Status mode AI (Flash/Pro)
+let isDeepThink = false;
 
 const chatBox = document.getElementById('chat-box');
 const inputField = document.getElementById('user-input');
@@ -18,7 +18,6 @@ const sendBtn = document.getElementById('send-btn');
 const imageInput = document.getElementById('image-upload');
 const fileIndicator = document.getElementById('file-indicator');
 
-// Variabel ikon SVG untuk digunakan di JS
 const svgFlash = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
 const svgPro = `<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
 
@@ -32,22 +31,17 @@ modelBtn.addEventListener('click', (e) => {
     modelDropdown.classList.toggle('show');
 });
 
-// Menutup menu jika klik di luar
 document.addEventListener('click', () => {
     modelDropdown.classList.remove('show');
 });
 
 modelOptions.forEach(option => {
     option.addEventListener('click', () => {
-        // Hapus class active dari semua opsi
         modelOptions.forEach(opt => opt.classList.remove('active'));
-        // Tambahkan ke yang dipilih
         option.classList.add('active');
         
-        // Update state
         isDeepThink = option.getAttribute('data-value') === 'true';
         
-        // Update teks tombol beserta SVG
         if(isDeepThink) {
             modelBtn.innerHTML = `${svgPro} Pro`;
         } else {
@@ -55,7 +49,6 @@ modelOptions.forEach(option => {
         }
     });
 });
-// -------------------------
 
 imageInput.addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -89,7 +82,6 @@ function appendMessage(sender, text, imgData = null, autoScroll = true) {
     div.innerHTML = content;
     chatBox.appendChild(div);
     
-    // Hanya digulir otomatis jika autoScroll ditetapkan true
     if (autoScroll) {
         chatBox.scrollTop = chatBox.scrollHeight;
     }
@@ -110,10 +102,10 @@ async function sendMessage() {
         deepThink: isDeepThink
     };
 
-    // User merespons selalu scroll ke bawah
     appendMessage('user', text, base64Image, true);
     inputField.value = '';
     fileIndicator.textContent = "";
+    const currentBase64 = base64Image;
     base64Image = null;
     mimeType = null;
     imageInput.value = '';
@@ -121,7 +113,6 @@ async function sendMessage() {
     inputField.disabled = true;
     sendBtn.disabled = true;
     
-    // Tampilkan Animasi Loading Titik-Titik
     const loadingId = "loading-" + Date.now();
     const loadingDiv = document.createElement('div');
     loadingDiv.classList.add('message', 'ai', 'fade-in');
@@ -134,7 +125,7 @@ async function sendMessage() {
         </div>
     `;
     chatBox.appendChild(loadingDiv);
-    chatBox.scrollTop = chatBox.scrollHeight; // Fokus otomatis saat menunggu proses
+    chatBox.scrollTop = chatBox.scrollHeight;
 
     try {
         const response = await fetch('/api/chat', {
@@ -145,21 +136,23 @@ async function sendMessage() {
 
         const data = await response.json();
         
-        document.getElementById(loadingId).remove();
+        if (document.getElementById(loadingId)) {
+            document.getElementById(loadingId).remove();
+        }
         
         if (data.error) {
             appendMessage('system', `[API_ERROR] ${data.error}`, null, true);
         } else {
-            // Jawaban AI masuk tanpa scroll paksa ke bagian bawahnya
             appendMessage('ai', data.reply, null, false);
         }
     } catch (err) {
-        if(document.getElementById(loadingId)) document.getElementById(loadingId).remove();
+        if (document.getElementById(loadingId)) {
+            document.getElementById(loadingId).remove();
+        }
         appendMessage('system', `[SYS_FAIL] Jaringan terputus.`, null, true);
     } finally {
         inputField.disabled = false;
         sendBtn.disabled = false;
-        // inputField.focus(); -> DIHAPUS agar keyboard HP tidak otomatis naik menutupi layar setelah AI membalas.
     }
 }
 
